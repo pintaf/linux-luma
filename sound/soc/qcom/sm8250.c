@@ -13,7 +13,6 @@
 #include <linux/input-event-codes.h>
 #include "qdsp6/q6afe.h"
 #include "common.h"
-#include "usb_offload_utils.h"
 #include "sdw.h"
 
 #define MI2S_BCLK_RATE		1536000
@@ -22,8 +21,6 @@ struct sm8250_snd_data {
 	bool stream_prepared[AFE_PORT_MAX];
 	struct snd_soc_card *card;
 	struct snd_soc_jack jack;
-	struct snd_soc_jack usb_offload_jack;
-	bool usb_offload_jack_setup;
 	struct snd_soc_jack dp_jack;
 	bool jack_setup;
 };
@@ -36,9 +33,6 @@ static int sm8250_snd_init(struct snd_soc_pcm_runtime *rtd)
 	switch (cpu_dai->id) {
 	case DISPLAY_PORT_RX:
 		return qcom_snd_dp_jack_setup(rtd, &data->dp_jack, 0);
-	case USB_RX:
-		return qcom_snd_usb_offload_jack_setup(rtd, &data->usb_offload_jack,
-						       &data->usb_offload_jack_setup);
 	default:
 		return qcom_snd_wcd_jack_setup(rtd, &data->jack, &data->jack_setup);
 	}
@@ -46,13 +40,6 @@ static int sm8250_snd_init(struct snd_soc_pcm_runtime *rtd)
 
 static void sm8250_snd_exit(struct snd_soc_pcm_runtime *rtd)
 {
-	struct sm8250_snd_data *data = snd_soc_card_get_drvdata(rtd->card);
-	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
-
-	if (cpu_dai->id == USB_RX)
-		qcom_snd_usb_offload_jack_remove(rtd,
-						 &data->usb_offload_jack_setup);
-
 }
 
 static int sm8250_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
@@ -78,6 +65,13 @@ static int sm8250_snd_startup(struct snd_pcm_substream *substream)
 	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
 	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
 	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
+
+	/* The FP5 LPASS path only produces correct output for 16-bit PCM;
+	 * PipeWire otherwise negotiates S24_LE and the speaker is very quiet.
+	 */
+	snd_pcm_hw_constraint_mask64(substream->runtime,
+				     SNDRV_PCM_HW_PARAM_FORMAT,
+				     SNDRV_PCM_FMTBIT_S16_LE);
 
 	switch (cpu_dai->id) {
 	case PRIMARY_MI2S_RX:
