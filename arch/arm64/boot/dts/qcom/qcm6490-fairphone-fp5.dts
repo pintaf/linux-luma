@@ -721,6 +721,7 @@
 	ports {
 		port@0 {
 			csiphy0_ep: endpoint {
+				clock-lanes = <7>;
 				data-lanes = <0 1 2>;
 				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
 				remote-endpoint = <&camera_imx800_ep>;
@@ -777,7 +778,7 @@
 			camera_imx800_ep: endpoint {
 				data-lanes = <1 2 3>;
 				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
-				link-frequencies = /bits/ 64 <130000000>;
+				link-frequencies = /bits/ 64 <700000000>;
 				remote-endpoint = <&csiphy0_ep>;
 			};
 		};
