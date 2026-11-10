@@ -4,6 +4,7 @@
 #include <dt-bindings/sound/qcom,q6afe.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/of.h>
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <sound/pcm.h>
@@ -78,6 +79,16 @@ static int sm8250_snd_startup(struct snd_pcm_substream *substream)
 	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
 	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
 	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
+
+	/* The FP5 LPASS path only produces correct output for 16-bit PCM;
+	 * PipeWire otherwise negotiates S24_LE and the speaker is very quiet.
+	 * Other sm8250 machines keep their existing format negotiation.
+	 */
+	if (of_device_is_compatible(rtd->card->dev->of_node,
+				    "fairphone,fp5-sndcard"))
+		snd_pcm_hw_constraint_mask64(substream->runtime,
+					     SNDRV_PCM_HW_PARAM_FORMAT,
+					     SNDRV_PCM_FMTBIT_S16_LE);
 
 	switch (cpu_dai->id) {
 	case PRIMARY_MI2S_RX:
