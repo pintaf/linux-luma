@@ -1575,22 +1575,6 @@
 		};
 	};
 
-	usb-dai-link {
-		link-name = "USB Playback";
-
-		codec {
-			sound-dai = <&q6usbdai USB_RX>;
-		};
-
-		cpu {
-			sound-dai = <&q6afedai USB_RX>;
-		};
-
-		platform {
-			sound-dai = <&q6routing>;
-		};
-	};
-
 	wcd-capture-dai-link {
 		link-name = "WCD Capture";
 
