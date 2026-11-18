@@ -1,0 +1,9 @@
+# SELinux options for the Fairphone 5 device build. The base luma.fragment
+# should carry these once it lands; keep the fragment for the FP5 build path.
+CONFIG_AUDIT=y
+CONFIG_SECURITY_NETWORK=y
+CONFIG_SECURITY_SELINUX=y
+CONFIG_DEFAULT_SECURITY_SELINUX=y
+# CONFIG_DEFAULT_SECURITY_DAC is not set
+CONFIG_SECURITY_SELINUX_DEVELOP=y
+# CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
